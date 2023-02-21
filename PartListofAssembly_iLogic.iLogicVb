@@ -1,0 +1,460 @@
+﻿Public Class CustomForm
+	Inherits System.Windows.Forms.Form
+	
+	Public Sub New()
+	oForm = Me
+		With oForm
+			' Set up form	
+			.FormBorderStyle = FormBorderStyle.FixedToolWindow 'Fixed3D / FixedDialog / FixedSingle / FixedToolWindow / None / Sizable / SizableToolWindow
+			'.MaximizeBox = False
+			'.MinimizeBox = False
+			.StartPosition = FormStartPosition.CenterScreen
+			.Width = 1200
+			.Height = 400
+			'.TopMost = True
+			.Text = "Parts List of Assembly " & PublicValue.AssemblyName
+			.Name = "Parts List"
+			
+		End With
+
+        Dim ListView2 As New ListView
+		With ListView2
+			.Width = 1170
+			.Height = 300
+			.Top = 5
+			.Left = 6
+			.View = System.Windows.Forms.View.Details	
+			.LabelEdit = True
+			.AllowColumnReorder = True
+			'.CheckBoxes = True
+			.FullRowSelect = True
+			.GridLines = True
+			.Sorting = SortOrder.Ascending              
+		End With
+		
+		Dim Label_Assem_i As New Label
+		Label_Assem_i.Text = "Assembly : " 
+		With Label_Assem_i
+			'.Font = New Font("Microsoft Sans Serif", "style = Bold", 12)
+			.Top = 400
+			.Left = 20
+		End With
+		
+		
+        'Label2.Font = New Font("Microsoft Sans Serif", "style = Bold", 12)  
+	
+		ListView2.Columns.Add("Name", 200, HorizontalAlignment.Left) 'Column 1
+		ListView2.Columns.Add("Width(mm)", 80, HorizontalAlignment.Center) 'Column 3
+		ListView2.Columns.Add("Length(mm)", 80, HorizontalAlignment.Center) 'Column 1
+		ListView2.Columns.Add("Height(mm)", 80, HorizontalAlignment.Center) 'Column 2
+		ListView2.Columns.Add("Volume(㎤)", 80, HorizontalAlignment.Center) 'Column 3
+		ListView2.Columns.Add("Material", 290, HorizontalAlignment.Center) 'Column 1
+		ListView2.Columns.Add("Mass(kg)", 80, HorizontalAlignment.Center) 'Column 2
+		ListView2.Columns.Add("Cost($)", 80, HorizontalAlignment.Center) 'Column 2
+		ListView2.Columns.Add("Quantity", 70, HorizontalAlignment.Center) 'Column 2
+		ListView2.Columns.Add("Total Cost($)", 80, HorizontalAlignment.Center) 'Column 2
+
+        'Declare Array For ListView Items
+		
+		'MessageBox.Show(PublicValue.oTotalDict.Count)
+        Dim arrLVItem(PublicValue.oTotalDict.Count-1) As ListViewItem
+        Dim j As Integer 'Loop Counter
+		Dim s As Integer 'Loop Counter
+
+        'Loop Through Each ListViewItem Array Item
+        For j = 0 To PublicValue.oTotalDict.Count - 1
+			'arrLVItem.Length - 1
+            'Initialize ListViewItem Array
+            arrLVItem(j) = New ListViewItem
+            'Add Text To First ListView Item - The Zodiac Sign
+            arrLVItem(j).SubItems(0).Text = PublicValue.oTotalDict.Keys(j)
+            'Add From and To SubItems On Zodiac ListView Item
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isWidth)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isLength)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isHeight)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isVolume)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isMaterial)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isMass)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isCost_each)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isQuantity)
+			arrLVItem(j).SubItems.Add(PublicValue.oTotalDict.Values(j).isCost)
+			s = s +PublicValue.oTotalDict.Values(j).isQuantity
+			
+        Next j
+        'Add Completed Arrays To ListView
+        ListView2.Items.AddRange(arrLVItem)
+		AddHandler ListView2.Click, AddressOf ListView2_Click  
+		oForm.Controls.Add(ListView2)	
+		
+		Dim Button1 As New Button()
+		With Button1
+			.Text = "Export"
+			.Top = 320
+			.Left = 1100
+			.Enabled = True
+		End With
+		AddHandler Button1.Click, AddressOf Button1_Click  
+		oForm.Controls.Add(Button1)
+
+		Dim Label_PartKind_i As New Label
+		Label_PartKind_i.Text = "Kind of Parts : "  
+		Dim Label_PartKind_o As New Label
+		Label_PartKind_o.Text = "			" 
+		
+		Dim Label_PartCount_i As New Label
+		Label_PartCount_i.Text = "Count of Parts : "  
+		Dim Label_PartCount_o As New Label
+		Label_PartCount_o.Text = "			"  
+
+
+        With Label_PartKind_i
+			.Text = "Kind of Parts : "
+			.Top = 320
+			.Left = 100
+			.Enabled = True
+		End With
+		oForm.Controls.Add(Label_PartKind_i)
+		With Label_PartKind_o
+			.Text = PublicValue.oTotalDict.Count
+			.Top = 320
+			.Left = 200
+			.Enabled = True
+		End With
+		oForm.Controls.Add(Label_PartKind_o)
+		
+		With Label_PartCount_i
+			.Text = "Count of Parts : "
+			.Top = 320
+			.Left = 300
+			.Enabled = True
+		End With
+		oForm.Controls.Add(Label_PartCount_i)
+		With Label_PartCount_o
+			.Text = s
+			.Top = 320
+			.Left = 400
+			.Enabled = True
+		End With
+		oForm.Controls.Add(Label_PartCount_o)
+		
+
+
+	End Sub
+
+	Private Sub CustomForm_FormClosing(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+		If PublicValue.CloseFlag = 0 Then 
+			PublicValue.oTotalDict.Clear
+			PublicValue.arrMaterialDic.Clear
+		End If
+	End Sub
+	Private Sub Button1_Click(ByVal sender As System.Object, ByVal E As System.EventArgs)
+       Using sfd As New SaveFileDialog
+        sfd.Filter = "Excel Files(*.xlsx)|*.xlsx | Text Files(*.txt)|*.txt"
+        If sfd.ShowDialog = DialogResult.OK Then
+			'define the file to create/open
+			myXLS_File = sfd.FileName
+			Dim fi As New IO.FileInfo(myXLS_File)
+			Dim extn As String = fi.Extension
+							'MessageBox.Show(extn)
+			If extn = ".xlsx" Then 
+				'define Excel Application object
+				excelApp = CreateObject("Excel.Application")
+				'set Excel to run visibly, change to false if you want to run it invisibly
+				excelApp.Visible = False
+	
+				'suppress prompts (such as the compatibility checker)
+				excelApp.DisplayAlerts = False
+				
+				'check for existing file
+				If Dir(myXLS_File) <> "" Then
+				'workbook exists, open it
+				excelWorkbook = excelApp.Workbooks.Open(myXLS_File)
+				'set the first sheet active
+				excelSheet = excelWorkbook.Worksheets(1).activate
+				Else
+				'workbook does NOT exist, so create a new one using the default template
+				excelWorkbook = excelApp.Workbooks.Add
+				' or use this syntax to specify a template to use
+				'excelWorkbook =  excelApp.Workbooks.Add (Template: = "C:\Temp\Best_Excel_Template_Ever.xlt")
+				End If
+				'Insert data into Excel.
+				With excelApp
+					.Range("A"& 1).Select
+					.ActiveCell.Value = "Name"
+					.Range("B"& 1).Select
+					.ActiveCell.Value = "Width(mm)"
+					.Range("C"& 1).Select
+					.ActiveCell.Value = "Length(mm)"
+					.Range("D"& 1).Select
+					.ActiveCell.Value = "Height(mm)"
+					.Range("E"& 1).Select
+					.ActiveCell.Value = "Volume(㎤)"
+					.Range("F"& 1).Select
+					.ActiveCell.Value = "Material"
+					.Range("G"& 1).Select
+					.ActiveCell.Value = "Mass"
+					.Range("H"& 1).Select
+					.ActiveCell.Value = "Cost($)"
+					.Range("I"& 1).Select
+					.ActiveCell.Value = "Quantity"
+					.Range("J"& 1).Select
+					.ActiveCell.Value = "Total Cost($)"
+	
+					Dim n As Integer
+					For n = 0 To PublicValue.oTotalDict.Count-1
+							.Range("A"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Keys(n)
+							.Range("B"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isWidth
+							.Range("C"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isLength
+							.Range("D"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isHeight
+							.Range("E"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isVolume
+							.Range("F"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isMaterial
+							.Range("G"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isMass
+							.Range("H"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isCost_each
+							.Range("I"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isQuantity
+							.Range("J"& n+2).Select
+							.ActiveCell.Value = PublicValue.oTotalDict.Values(n).isCost
+					Next			
+				End With  
+				'set all of the columns to autofit
+				excelApp.Columns.AutoFit  
+				'save the file
+				excelWorkbook.SaveAs(myXLS_File)
+				excelWorkbook.Close
+				excelApp.Quit
+				excelApp = Nothing 
+			Else If extn = ".txt" Then
+				Dim File As System.IO.StreamWriter
+				File = My.Computer.FileSystem.OpenTextFileWriter(myXLS_File, False)
+				Dim m As Integer
+				Dim mtext As String
+				For m = 0 To PublicValue.oTotalDict.Count-1
+
+					mtext = mtext & (	"******* Name	:" & PublicValue.oTotalDict.Keys(m) & " *******" & vbCrLf  _
+						& "Width(mm) :	" & PublicValue.oTotalDict.Values(m).isWidth & vbCrLf _
+						& "Length(mm) :	" & PublicValue.oTotalDict.Values(m).isLength & vbCrLf _
+						& "Height(mm) :	" & PublicValue.oTotalDict.Values(m).isHeight & vbCrLf  _
+						& "Volume(㎤) :	" & PublicValue.oTotalDict.Values(m).isVolume & vbCrLf  _
+						& "Material :	" & PublicValue.oTotalDict.Values(m).isMaterial & vbCrLf  _
+						& "Mass :	" & PublicValue.oTotalDict.Values(m).isMass & vbCrLf  _
+						& "Cost($) :	" & PublicValue.oTotalDict.Values(m).isCost_each & vbCrLf  _
+						& "Quantity :	" & PublicValue.oTotalDict.Values(m).isQuantity & vbCrLf  _
+						& "Total Cost($) :	" & PublicValue.oTotalDict.Values(m).isCost & vbCrLf & vbCrLf)
+				Next
+				File.Write("")
+				File.WriteLine(mtext)
+				File.Close()
+			Else 
+				MessageBox.Show("Unsupported file type.Retry")
+			End If
+			
+
+            'MessageBox.Show("FileName: " & sfd.FileName, "Screenshot Saved")
+        End If
+    End Using
+	End Sub
+
+	Private Sub ListView2_Click(ByVal sender As System.Object, ByVal E As System.EventArgs)
+		arrMaterial_Selected = InputListBox("Choose Part material", PublicValue.arrMaterial, PublicValue.arrMaterial(0), Title := "Part material", ListName := "Available Standard materials")
+		arrMaterial_indexOf = Array.IndexOf(PublicValue.arrMaterial, arrMaterial_Selected)
+		PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isMaterial = PublicValue.arrMaterialDic.item(arrMaterial_indexOf).MaterialDetail
+		PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isMass = _
+			PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isVolume * PublicValue.arrMaterialDic.item(arrMaterial_indexOf).MaterialDensity/1000
+		PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isCost_each = _
+			PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isMass * PublicValue.arrMaterialDic.item(arrMaterial_indexOf).MaterialCost
+		PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isCost = _
+			PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isCost_each  * PublicValue.oTotalDict.item(sender.SelectedItems(0).Text).isQuantity 
+		
+		'MessageBox.Show(sender.SelectedItems(0).Text)
+		'MessageBox.Show(arrMaterial_indexOf)
+		PublicValue.CloseFlag = 1
+		Me.Close
+		PublicValue.CloseFlag = 0
+		Dim myfrm As New CustomForm
+		myfrm.Show
+	End Sub
+End Class
+
+Public Class ofItem
+	Property isWidth As Double
+	Property isLength As Double
+	Property isHeight As Double
+	Property isVolume As Double
+	Property isMaterial As String
+	Property isMass As Double
+	Property isCost_each As Double
+	Property isQuantity As Integer
+	Property isCost As Double
+	Public Sub New()
+    End Sub
+End Class
+
+Public Class ofMaterial
+    Public Property MaterialDetail As String
+    Public Property MaterialDensity As Double
+    Public Property MaterialCost As Double
+    Public Sub New()
+    End Sub
+End Class
+
+Public Class PublicValue
+   	Public Shared Property PartCount As Integer = 0
+	Public Shared Property KindCount As Integer = 0
+	Public Shared Property CloseFlag As Integer = 0
+	Public Shared AssemblyName As String
+	Public Shared PartsAll(10240) As String
+	Public Shared oTotalDict As New Dictionary(Of String, ofItem) 
+	Public Shared arrMaterialDic As New Dictionary(Of Integer, ofMaterial)
+	Public Shared arrMaterial() As String = {"1023 carbon steel sheet - 7.9kg/㎥ - 10$/kg", "AISI 1010 Steel - 7.7kg/㎥ - 11$/kg", _
+											 "Cast alloy steel - 7.9kg/㎥ - 8$/kg", "AISI 304 - 8kg/㎥ - 6$/kg", _
+											 "Ductile Iron - 7.1kg/㎥ - 6.3$/kg", "Gray Cast Iron - 7.2kg/㎥- 7$/kg", _
+											 "Copper - 8.9kg/㎥ - 9$/kg", "1060 Alloy  - 2.1kg/㎥ - 8.2$/kg", _
+											 "Aluminum Bronze - 7.4kg/㎥ - 3$/kg", "Stainless Steel ferritic  - 7.8kg/㎥ - 7.2$/kg"}
+											
+
+End Class
+
+Public Sub Main()
+	'PublicValue.PartCount = 0
+
+	PublicValue.arrMaterialDic.Add(0, New ofMaterial With {.MaterialDetail = "1023 carbon steel sheet - 7.9kg/㎥ - 10$", .MaterialDensity = 7.9, .MaterialCost = 10 })
+	PublicValue.arrMaterialDic.Add(1, New ofMaterial With {.MaterialDetail = "AISI 1010 Steel - 7.7kg/㎥ - 11$/kg", .MaterialDensity = 7.7, .MaterialCost = 11 })
+	PublicValue.arrMaterialDic.Add(2, New ofMaterial With {.MaterialDetail = "Cast alloy steel - 7.9kg/㎥ - 8$/kg", .MaterialDensity = 7.9, .MaterialCost = 8 })
+	PublicValue.arrMaterialDic.Add(3, New ofMaterial With {.MaterialDetail = "AISI 304 - 8kg/㎤ - 6$/kg", .MaterialDensity = 8, .MaterialCost = 6 })
+	PublicValue.arrMaterialDic.Add(4, New ofMaterial With {.MaterialDetail = "Ductile Iron - 7.1kg/㎥ - 6.3$/kg", .MaterialDensity = 7.1, .MaterialCost = 6.3 })
+	PublicValue.arrMaterialDic.Add(5, New ofMaterial With {.MaterialDetail = "Gray Cast Iron - 7.2kg/㎥ - 7$/kg", .MaterialDensity = 7.2, .MaterialCost = 7 })
+	PublicValue.arrMaterialDic.Add(6, New ofMaterial With {.MaterialDetail = "Copper - 8.9kg/㎥ - 9$/kg", .MaterialDensity = 8.9, .MaterialCost = 9 })
+	PublicValue.arrMaterialDic.Add(7, New ofMaterial With {.MaterialDetail = "1060 Alloy  - 2.1kg/㎥ - 8.2$/kg", .MaterialDensity = 2.1, .MaterialCost = 8.2 })
+	PublicValue.arrMaterialDic.Add(8, New ofMaterial With {.MaterialDetail = "Aluminum Bronze - 7.4kg/㎥ - 3$/kg", .MaterialDensity = 7.4, .MaterialCost = 3 })
+	PublicValue.arrMaterialDic.Add(9, New ofMaterial With {.MaterialDetail = "Stainless Steel ferritic  - 7.8kg/㎥ - 7.2$/kg", .MaterialDensity = 7.8, .MaterialCost = 7.2 })
+
+'	Dim oDocXXX As AssemblyDocument
+'	Dim oDocTemp As AssemblyDocument
+'	oDocXXX = ThisApplication.ActiveDocument
+	
+'	Dim oCount As Integer
+'	oCount = oDocXXX.SelectSet.Count
+	
+'	If oCount = 0 Then 
+'		oDocTemp = oDocXXX
+'	Else If oCount = 1 Then
+'		Dim occXXX As ComponentOccurrence
+'		occXXX = oDocXXX.SelectSet.Item(1)
+'		Dim occDocXXX As Document
+'		oDocTemp = occDocXXX.Definition.Document
+'	Else 
+'		MessageBox.Show("sdfsdfdsfdsfdsf")
+'		Return
+'	End If
+
+		
+	TraverseAssemblySample()
+	
+	Dim i As Integer
+	Dim j As Integer
+	Dim PartsKind(10240) As String
+	Dim oOccName As String 
+	Dim oAsm As AssemblyDocument = ThisDoc.Document
+	Dim eachPartCount(10240) As Integer
+
+	For i = 0 To PublicValue.PartCount-1
+		If UBound(Filter(PartsKind, PublicValue.PartsAll(i))) Then 
+			PartsKind(j) = PublicValue.PartsAll(i)
+			eachPartCount(j) = UBound(Filter(PublicValue.PartsAll, PartsKind(j))) + 1
+			Logger.Info(PartsKind(j) & "=>" & UBound(Filter(PublicValue.PartsAll, PartsKind(j))) + 1)
+			j = j + 1
+		End If
+	Next
+	PublicValue.KindCount = j
+
+	For i = 0 To PublicValue.KindCount - 1
+		Dim oOcc As ComponentOccurrence = Nothing
+		For Each oDoc As Document In oAsm.AllReferencedDocuments
+			For Each sOcc As ComponentOccurrence In oAsm.ComponentDefinition.Occurrences.AllReferencedOccurrences(oDoc)
+				If sOcc.Name = Left(PartsKind(i), Len(PartsKind(i)) -4) & ":1" '"7" '
+					oOcc = sOcc
+					Exit For
+				End If
+			Next
+			If oOcc IsNot Nothing Then Exit For
+		Next
+		If oOcc IsNot Nothing Then
+			Dim oRB As Double() = GetRangeBoxData(oOcc, oAsm)
+			PublicValue.oTotalDict.Add(PartsKind(i), New ofItem With {.isWidth = Round(oRB(0)), .isLength = Round(oRB(1)), .isHeight = Round(oRB(2)), _
+										.isVolume = Round(oRB(0) * oRB(1) * oRB(2) / 1000), .isMaterial = PublicValue.arrMaterialDic.item(0).MaterialDetail, _
+										.isMass = Round(oRB(0) * oRB(1) * oRB(2) * PublicValue.arrMaterialDic.item(0).MaterialDensity / 1000000), _
+										.isCost_each = Round(oRB(0) * oRB(1) * oRB(2) * PublicValue.arrMaterialDic.item(0).MaterialDensity / 1000000) * _
+											PublicValue.arrMaterialDic.item(0).MaterialCost, .isQuantity = eachPartCount(i), _
+										.isCost = Round(oRB(0) * oRB(1) * oRB(2) * PublicValue.arrMaterialDic.item(0).MaterialDensity / 1000000) * _
+											PublicValue.arrMaterialDic.item(0).MaterialCost * eachPartCount(i)})
+			'MsgBox(PartsKind(i) & PublicValue.oTotalDict.Item(PartsKind(i)).isQuantity)
+		Else
+			'MsgBox("No occurrence with name: " & oOccName & " in this assembly.")
+		End If
+	Next
+	Dim myfrm As New CustomForm
+	myfrm.Show
+	
+End Sub
+
+Public Sub TraverseAssemblySample()
+    ' Get the active assembly.
+    Dim oAsmDoc As AssemblyDocument = ThisApplication.ActiveDocument
+	PublicValue.AssemblyName = oAsmDoc.DisplayName
+    Logger.Info(oAsmDoc.DisplayName)
+
+    ' Call the function that does the recursion.
+    Call TraverseAssembly(oAsmDoc.ComponentDefinition.Occurrences, 1)
+End Sub
+
+Private Sub TraverseAssembly(Occurrences As ComponentOccurrences, _
+                             Level As Integer)
+    ' Iterate through all of the occurrence in this collection.  This
+    ' represents the occurrences at the top level of an assembly.
+    Dim oOcc As ComponentOccurrence
+    For Each oOcc In Occurrences
+        ' Print the name of the current occurrence.
+        Logger.Info(Space(Level * 3) & oOcc.Name)
+        ' Check to see if this occurrence represents a subassembly
+        ' and recursively call this function to traverse through it.
+        If oOcc.DefinitionDocumentType = kAssemblyDocumentObject Then
+            Call TraverseAssembly(oOcc.SubOccurrences, Level + 1)
+		Else 
+			Dim doc As Document
+			Dim CurFileName As String
+			'get the selected item document occurrence name
+			doc = oOcc.Definition.Document
+			'get the path and file name of the selected item
+			CurFileName = doc.FullFileName
+			'Logger.Info(CurFileName)		
+			'defines backslash as the subdirectory separator
+			Dim strCharSep As String = System.IO.Path.DirectorySeparatorChar
+			'find the postion of the last backslash in the path
+			FNamePos = InStrRev(CurFileName, "\", -1)   
+			'get the file name with the file extension
+			Name = Right(CurFileName, Len(CurFileName) -FNamePos)
+			'get the file name (without extension)
+			ShortName = Left(Name, Len(Name) -4)
+			PublicValue.PartsAll(PublicValue.PartCount) = Name
+			PublicValue.PartCount = PublicValue.PartCount + 1		
+        End If
+    Next
+End Sub
+
+Function GetRangeBoxData(ByVal oOcc As ComponentOccurrence, oAsm As AssemblyDocument) As Double()
+	Dim UoM As UnitsOfMeasure = oAsm.UnitsOfMeasure
+	Dim returnVal(2) As Double
+	Dim oBox As Box = oOcc.RangeBox
+	returnval(0) = UoM.ConvertUnits(Math.Abs(oBox.MaxPoint.X - oBox.MinPoint.X), UnitsTypeEnum.kDatabaseLengthUnits, UoM.LengthUnits)
+	returnval(1) = UoM.ConvertUnits(Math.Abs(oBox.MaxPoint.Y - oBox.MinPoint.Y), UnitsTypeEnum.kDatabaseLengthUnits, UoM.LengthUnits)
+	returnval(2) = UoM.ConvertUnits(Math.Abs(oBox.MaxPoint.Z - oBox.MinPoint.Z), UnitsTypeEnum.kDatabaseLengthUnits, UoM.LengthUnits)
+	Return returnVal
+End Function
